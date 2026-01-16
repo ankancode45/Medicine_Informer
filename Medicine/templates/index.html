@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medicine Information Teller</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    
+    .medicine-info {
+      white-space: pre-wrap;   
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin-top: 15px;
+    }
+    
+    .medicine-info p, .medicine-info div {
+      margin: 0.4em 0;
+    }
+    .medicine-info::before {
+      content: "";
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <h1>Medicine Information Teller</h1>
+
+    <div class="info-box">
+      <div class="input-section" id="inputSection">
+        <p class="description">Enter a medicine name and optional strength to get structured information.</p>
+
+        <form id="medicineForm">
+          <label for="medicine_name">Medicine Name <span class="required">*</span></label>
+          <input type="text" id="medicine_name" name="medicine_name" placeholder="e.g., Paracetamol" required>
+
+          <label for="strength">Strength / Power (optional)</label>
+          <input type="text" id="strength" name="strength" placeholder="e.g., 500 mg">
+
+          <button type="submit">Get Medicine Info</button>
+        </form>
+      </div>
+
+      <div class="response-section" id="responseSection">
+        <div id="loadingIndicator" class="loading" style="display: none;">
+          Fetching information...
+        </div>
+        
+        <div class="medicine-info" id="medicineInfo"></div>
+        <button class="back-button" id="backButton" style="display: none;">← Back to Search</button>
+      </div>
+    </div>
+
+    <div class="footer">
+      This information is for educational purposes only. Consult a doctor before taking any medicine.
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('medicineForm');
+    const inputSection = document.getElementById('inputSection');
+    const responseSection = document.getElementById('responseSection');
+    const medicineInfo = document.getElementById('medicineInfo');
+    const backButton = document.getElementById('backButton');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const medicineName = document.getElementById('medicine_name').value;
+      const strength = document.getElementById('strength').value;
+
+      
+      inputSection.classList.add('hidden');
+      responseSection.classList.add('active');
+      loadingIndicator.style.display = 'block';
+      medicineInfo.innerHTML = '';
+      backButton.style.display = 'none';
+
+      try {
+        const response = await fetch('/get_medicine_info', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            medicine_name: medicineName,
+            strength: strength
+          })
+        });
+
+        const data = await response.json();
+
+        loadingIndicator.style.display = 'none';
+    
+        medicineInfo.textContent = data.medicine_info;
+        backButton.style.display = 'block';
+      } catch (error) {
+        loadingIndicator.style.display = 'none';
+        medicineInfo.innerHTML = '<p style="color: #e74c3c; text-align: center;">Error fetching medicine information. Please try again.</p>';
+        backButton.style.display = 'block';
+      }
+    });
+
+    backButton.addEventListener('click', () => {
+      responseSection.classList.remove('active');
+      inputSection.classList.remove('hidden');
+      form.reset();
+    });
+  </script>
+</body>
+</html>
